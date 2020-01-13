@@ -1,0 +1,146 @@
+Name: Kyle Wiskel & Nayan Prakash
+ID #: 1540485 & 1533064
+CMPUT 275, Winter 2019
+
+CMPUT 275 Final Project -- Digital Image Processing Suite
+____________________________________________________________________________
+
+Included Files
+
+    * main.cpp
+    * hslModification.cpp
+    * hslModification.h
+    * fourier.cpp
+    * fourier.h
+    * colorspaceModification.cpp
+    * colorspaceModification.h
+    * kernelConvolve.cpp
+    * kernelConvolve.h
+    * dithering.cpp
+    * dithering.h
+    * masking.cpp
+    * masking.h
+    * Makefile
+    * README
+    * CIMG/
+    * cat.jpg (good for Fourier transform)
+    * sun3.jpg (good for Fourier transform)
+    * lena.jpg
+    * dark.jpg
+    * noise2.jpg (for use with Gaussian filter)
+
+RUNNING INSTRUCTIONS
+____________________
+
+    1. In the directory containg 'Makefile', run the command 'make'.
+    2. Ensure that the image you want to process is in the same directory
+    3. Start the program with the command './main'
+    4. Type in the filename of the image you want to process
+    5. The user can now follow along the user interface to process the image,
+        display the current processed image, undo the previous edit, or quit the
+        program.
+    6. Upon quitting the program, the program will display the original image compared
+        to the processed image
+
+
+Makefile running targets:
+
+    1. make (main): links the compiled 'main.o', 'hslModification.o' to the executable 'main'
+    2. make main.o: compiles and links 'main.cpp' to 'main.o'
+    3. make hslModification.o: compiles and links 'hslModification.cpp' to 'hslModification.o'
+    4. make fourier.o: compiles and links 'fourier.cpp' to 'fourier.o'
+    5. make masking.o: compiles and links 'masking.cpp' to 'masking.o'
+    6. make kernelConvolve.o: compiles and links 'kernelConvolve.cpp' to 'kernelConvolve.o'
+    7. make dithering.o: compiles and links 'dithering.cpp' to 'dithering.o'
+    8. make colorspaceModification.o: compiles and links 'colorspaceModification.cpp' to 'colorspaceModification.o'
+    9. make clean: cleans up all the generated files and executable
+
+
+
+Files + Function Description:
+
+
+    1. main.cpp --> This file holds the main function that is used as a user interface to edit, modify and process images
+
+    2. hslModification.cpp/hslModification.h --> This file holds the functions use to modify the saturation/contrast/
+    brightness of the image. The following functions are included (they are also commented to explain their functionality):
+
+        a) void changeSaturation(CImg<unsigned char> & image, double satScale) --> This function accepts a pointer to the image object in memory as well as a saturation scaling value. The function scales the saturation according to the user input. This is done by converting the RGB values to HSL and then modifying the S (saturation) values. This function also implements code that is used to protect pixels that are basically unsaturated (as a scaled saturation would create unwated effects.) As well, the saturation cannot go above 100% so the final value must be constrained.
+
+        b) void changeBrightness(CImg<unsigned char> & image, double contrast, double brightness) --> This functon accepts a pointer to the image object in memory, as well as a contrast scaling factor and a brightness modification factor. The function then converts each pixel from RGB to HSL. To increase the contrast of the image, we first preserve the darker values (values that are close to black if scaled exhibit strange colouring effects). Then we scale every pixel by a certain factor. To change the brightness, the brightness factor is simply added to each pixel. The HSL is the converted back to RGB and the image values are modified.
+
+        c) void RGB2HSL(unsigned char r, unsigned char g, unsigned char b, unsigned char& h,unsigned char& s,unsigned char l) --> This function converts RGB pixel values to HSL pixel values. It accepts the RGB values as unsgined chars as well as 3 pointers for the HSL values (modifes variables created in the callee function). The conversion simply uses a known algorithm that can be found online to convert RGB to HSL. This function modifies the 3 values that are at the memory addresses defined by the pointers.
+
+        d) void HSL2RGB(unsigned char h, unsigned char s, unsigned char l, unsigned char& r,unsigned char& gunsigned char& b) --> This function converts HSL pixel values to RGB. It acceps the HSL values as unsgined charts as well as 3 pointers for the RGB values. The conversion simply uses a known algorithm specified by the website in the code comments. The function modifies the 3 values that are represented by the pass in pointers.
+
+        e) double colourTest(double tempC, double temp1, double temp2) --> This function performs a common test to proerpyl convert the HSL to RGB values. Since this function was being used 3 times (for r,g,b conversions), it was placed as a seperate function in order to shorten and modularize the code.
+
+    3. fourier.cpp/fourier.h --> This file holds the functions use to perform the fast fourier transform on the image. (It also contains a slower fourier transform). The following functions are included (they are also commented to explain their functionality):
+
+        a) std::vector<std::complex<double>> fastFourierTransform(std::vector<std::complex<double>>& values) --> This function performs that discrete Fast Fourier Transform on a vector containing the pixel values of the image. It performs the transform 3 times, on the 3 colour spectrums (R,G, and B). This function is alos used to perform the inverse of the FFT (simply the reverse process and then we divided by the total size in the callee function). This FOurier transform uses a Recrusive algorithm based on Cooley-Tukey FFT. That means that the image dimensions must be multiples of 2 for the FFT to work. **Therefore the images that work are 'cat.jpg' and 'sun3.jpg'. The time complexity of this algorithm is O(nlog(n)), where n is the size of the image (width *height * spectrum)
+
+        b) void slowFourierTransform(CImg<unsigned char> image) --> This function was our original implementation oft he Discrete Fourier Transform. This is not the FFT version of the DFT and therefore it runs in O(n^2) time complexity. This is a significantly larger time than the FFT and is not used in our final implementation. This implementation can work on any size image (the size does not have to be a multiple of 2)
+
+        c) void fourierRepresentation(std::string str) --> This function simply runs the fouriers transforms and then runs the inverse fourier transform. It then compares the initial image and then the image after FFT and inverse FFT. This is the exact same image (as expected) but it has slight blurring effect. To calculate the inverse FFT it simply uses the FFT function and then divides by the total image size. (This is the inverse of the DFT).
+
+    4. colorspaceModification.cpp/colorspaceModification.h --> This file holds the functions used to convert images to grayscale
+
+        a) CImg<unsigned char> toGrayscale(CImg<unsigned char> & image) --> This function is used to convert an image to grayscale
+
+    5. kernelConvolve.cpp/kernelConvolve.h --> These files hold the functions used to perform kernel convolution on an image
+
+        a) CImg<unsigned char> kernelConvolve(CImg<unsigned char> & image, float kernel[3][3], int n) --> kernel convolves with kernel of side length n
+        Note: n is assumed to be odd
+
+        b) CImg<unsigned char> gaussianFilter(CImg<unsigned char>  image, int delta) --> Performs a kernel convolve and tries to preserve edge values. This is done by comparing adjacent pixels and then redistributing the weight to the center pixel. An image good to test for noise reduction is 'noise2.jpg'
+
+    6. dithering.cpp/dithering.h --> These files hold the functions used to dither an image
+
+        a) int findHalftoneOption(unsigned char val) --> Helper function for halftoneDithering function. Finds which mask option
+        will be applied to 5x5 image superpixel depending on value of pixel centered in 5x5 superpixel
+        Note: there are only 7 possible levels of mask options
+
+        b) void setHalftone(CImg<unsigned char> & image, int x, int y, int c, unsigned char halftone[5][5]) -->
+        Helper function for halftoneDithering function. Applies halftone mask to 5x5 superpixel of image
+
+        c) void halftoneDithering(CImg<unsigned char> & image) --> Does helftone dithering on image in 5x5 circular shapes
+
+        d) unsigned char quantize(unsigned char val) --> helper function for floydSteinberg function. returns 0 or 255 to quantize
+        given value
+
+        e) void floydSteinberg(CImg<unsigned char> & image) -->  Does floyd-steinberg dithering on image and dithers up to 2^n
+        discrete colour values where n is the color depth of the image
+
+    7. masking.cpp/masking.h --> These files hold the functions used to mask an image
+
+        a) CImg<unsigned char> erosion(CImg<unsigned char> & image, int n) --> erodes image in an n-sized neighborhood around each pixel
+
+        b) CImg<unsigned char> dilation(CImg<unsigned char> & image, int n) --> dilates image in an n-sized neighborhood around each pixel
+
+        c) unsigned char findNearestVal(unsigned char val, int n) --> Helper function for pixelate function. Finds pixel value of n possible
+        options scaled across range 0-255
+
+        d) void pixelate(CImg<unsigned char> & image, int n, int c) --> pixelates image into n size squares with 2^c possible colors
+
+
+
+Notes and Assumptions
+____________________
+
+Some functions do not return an image and instead only operate on the provided image, whereas
+other functions return a new image. This is not done arbitrarily. Functions that return a
+new image must refer to the original, unchanged image to calculate the processed image,
+whereas functions that work on the same provided image can calculate based on the
+incrementally processed image.
+
+Inputting characters into the option inputs will cause the program to behave unexpectedly
+
+The fourier only works on images that have an even height and width. Provided are the
+cat image and sun3 image that work with fourier.
+
+No images were saved as this program was intended to show the differences between Digital Image
+Processing techniques, however, implementing a function to save the edited images could be
+achieved easily.
+
+This project makes use of the CImg library. Below is a link to resources on CImg.
+http://cimg.eu/
